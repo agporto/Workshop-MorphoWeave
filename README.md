@@ -460,7 +460,11 @@ Please also cite 3D Slicer, and SlicerDenseCorrespondenceAnalysis when you use A
 
 ## License
 
-This tutorial (text, figures, and scripts) is licensed under [CC BY 4.0](LICENSE). The molar data in `molar_tutorial/` comes from Boyer et al. (2011), via the MorphoWeave preprint's dataset (CC BY 4.0). If you reuse it, please cite both (see [How to cite](#how-to-cite)). You're free to reuse and adapt it, including for your own workshops, as long as you give credit. MorphoWeave itself is distributed under the [BSD 2-Clause License](https://github.com/agporto/SlicerMorphoWeave/blob/main/LICENSE).
+**Tutorial:** the text, figures, and scripts are licensed under [CC BY 4.0](LICENSE). You're free to reuse and adapt them, including for your own workshops, as long as you give credit.
+
+**Molar data:** the meshes and landmarks in `molar_tutorial/` are **not** covered by the CC BY 4.0 license. They are the teeth dataset from Boyer et al. (2011), collected and organized by Doug M. Boyer and publicly distributed with the CPsurfcomp suite (Lipman, 2011; [arXiv:1110.3649](https://arxiv.org/abs/1110.3649)). That distribution carries no license of its own. The meshes are included here, after alignment in MorphoWeave, for teaching and research. If you use them, please cite Boyer et al. (2011) (see [How to cite](#how-to-cite)).
+
+**MorphoWeave** itself is distributed under the [BSD 2-Clause License](https://github.com/agporto/SlicerMorphoWeave/blob/main/LICENSE).
 
 ---
 
