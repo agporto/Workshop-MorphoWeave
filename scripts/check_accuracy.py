@@ -10,7 +10,8 @@ import vtk
 WORK = os.path.expanduser("~/molar_tutorial")
 
 def read_points(path):
-    markup = json.load(open(path))["markups"][0]
+    with open(path, encoding="utf-8") as f:
+        markup = json.load(f)["markups"][0]
     pts = np.array([p["position"] for p in markup["controlPoints"]])
     return pts * [-1, -1, 1] if markup.get("coordinateSystem", "LPS") == "LPS" else pts
 

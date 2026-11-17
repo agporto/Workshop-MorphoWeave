@@ -36,7 +36,7 @@ In this tutorial you'll use **MorphoWeave** in 3D Slicer to:
 ### 0.2 Download the data
 
 1. Open the [MorphoWeave Figshare dataset](https://figshare.com/s/3ff773754624c9132e3e) and click **Download** (`data.zip`, 1.17 GB).
-2. Extract it. You only need this folder:
+2. Extract it. Windows (**Extract All**) and macOS (double-click) put the contents in a folder named `data`. On Linux, `unzip` extracts into the current folder. You only need this folder:
 
 ```text
 data/molar/2026_06-12_19_24_15/
@@ -77,38 +77,49 @@ molar_tutorial/
 <details>
 <summary><b>Option A: copy and paste into Slicer (recommended)</b></summary>
 
-Open **View → Python Console** in Slicer. Edit the `DATA` line to point to your extracted folder, then paste the following and press <kbd>Enter</kbd>. The script is also saved as [`scripts/setup_molar_tutorial.py`](scripts/setup_molar_tutorial.py).
+Open **View → Python Console** in Slicer. Change the path inside `DATA = r"..."` to the folder where you extracted `data.zip`, then paste the whole block into the console and press <kbd>Enter</kbd>. It works on Windows, macOS, and Linux. You can paste a Windows path with backslashes as-is, and the script finds the `molar` folder anywhere inside the path you give it. The script is also saved as [`scripts/setup_molar_tutorial.py`](scripts/setup_molar_tutorial.py).
 
 ```python
 import glob, os, shutil
 
-# 1) EDIT THIS: the folder you extracted from data.zip
-DATA = os.path.expanduser("~/Downloads/data/molar/2026_06-12_19_24_15")
+# 1) EDIT THIS: where you extracted data.zip. Paste the path between the quotes as-is;
+#    the r"..." keeps Windows backslashes working. Examples:
+#      Windows: r"C:\Users\you\Downloads\data"
+#      macOS:   r"~/Downloads/data"
+#      Linux:   r"~/Downloads"
+DATA = r"~/Downloads/data"
 
 # 2) Where the tutorial will work (created for you)
 WORK = os.path.expanduser("~/molar_tutorial")
 
 HELD_OUT = ["a10", "h08", "k01", "q02", "x02"]   # 5 molars kept out of the atlas
 
-if not os.path.isdir(os.path.join(DATA, "alignedModels")):
-    raise SystemExit(f"Can't find alignedModels/ inside {DATA} - check the DATA path above.")
+# Find molar/<run>/alignedModels under DATA, wherever your unzip tool put it
+DATA = os.path.expanduser(DATA.strip().strip('"'))
+found = [d for d in sorted(glob.glob(os.path.join(DATA, "**", "alignedModels"), recursive=True))
+         if "molar" in os.path.normpath(d).split(os.sep)]
 
+if not found:
+    raise FileNotFoundError(f"No molar/.../alignedModels folder found under {DATA}. Check the DATA path above.")
+
+SRC = os.path.dirname(found[0])
+print("Using data in", SRC)
 for sub in ("train/models", "train/landmarks", "test/models", "test/landmarks",
             "test/predicted", "output", "segmentation"):
     os.makedirs(os.path.join(WORK, sub), exist_ok=True)
 
-for mesh in glob.glob(os.path.join(DATA, "alignedModels", "*.ply")):
+for mesh in glob.glob(os.path.join(SRC, "alignedModels", "*.ply")):
     stem = os.path.basename(mesh)[:-len(".ply")]
-    lms = os.path.join(DATA, "alignedLMs", stem + ".mrk.json")
+    lms = os.path.join(SRC, "alignedLMs", stem + ".mrk.json")
     split = "test" if stem.split("_")[0] in HELD_OUT else "train"
     shutil.copy(mesh, os.path.join(WORK, split, "models"))
     shutil.copy(lms, os.path.join(WORK, split, "landmarks"))
 
 for split in ("train", "test"):
-    print(split, len(os.listdir(os.path.join(WORK, split, "models"))), "molars")
+    print(split, len(os.listdir(os.path.join(WORK, split, "models"))), "molars ->", os.path.join(WORK, split))
 ```
 
-It should print `train 110 molars` and `test 5 molars`.
+It should print `Using data in …`, then `train 110 molars` and `test 5 molars`. If the path is wrong, you'll see a `FileNotFoundError`. Fix `DATA` and paste again.
 
 </details>
 
@@ -252,13 +263,13 @@ Go to **MorphoWeave → Model Library**.
 Start with one held-out molar so you can watch each step.
 
 1. Load the target. Click **Add Data** (top-left toolbar), choose `molar_tutorial/test/models/a10_sas_align.ply`, and click **OK**. Don't load its manual landmarks yet.
-2. Go to **MorphoWeave → Landmark Transfer** and open the **Single Run** tab.
+2. Go to **MorphoWeave → Landmark Transfer** and open the **Single Run** tab. The numbers in the screenshot match steps 3–5 below.
 
 <p align="center"><img src="images/08_landmark_transfer_inputs.png" width="900" alt="Landmark Transfer Single Run tab with template selectors auto-filled, a10_sas_align chosen as target, and the Subsample button highlighted"></p>
 
-3. **①** The three template selectors and **SSM Data Table** are already filled with the `molars_…` nodes you just loaded. If any are empty, pick the matching `molars_…` node.
-4. **②** Set **Target model** to `a10_sas_align`.
-5. **③** Click the four buttons in order. Each one enables the next:
+3. The three template selectors and **SSM Data Table** are already filled with the `molars_…` nodes you just loaded. If any are empty, pick the matching `molars_…` node.
+4. Set **Target model** to `a10_sas_align`.
+5. Click the four buttons in order, starting with **1) Subsample source/target**. Each one enables the next:
 
 | Button | What it does | Time |
 |---|---|---|
@@ -311,14 +322,14 @@ On this specimen the mean distance between predicted and manual landmarks is **2
 
 ## 5. Landmark many molars at once (Landmark Transfer → Batch)
 
-Once a single run looks good, apply the same settings to a whole folder.
+Once a single run looks good, apply the same settings to a whole folder. The numbers in the screenshot match the steps below.
 
 <p align="center"><img src="images/12_batch.png" width="600" alt="Landmark Transfer Batch tab with the target and output directories set, the SSM table selected, and the progress bar at 100%"></p>
 
 1. Open the **Batch** tab. **Source mesh**, **Source correspondences**, **Source landmarks**, and **SSM Data Table** are pre-filled with the `molars_…` nodes.
-2. **①** Set **Target mesh directory** to `molar_tutorial/test/models` and **Target output landmark directory** to `molar_tutorial/test/predicted`.
-3. **②** Leave **Skip template optimization** unticked. Before registering each specimen, MorphoWeave then searches the shape model for a starting template that fits that specimen better.
-4. **③** Click **Run Batch Auto-Landmarking**. The 5 molars take about 40 seconds.
+2. Set **Target mesh directory** to `molar_tutorial/test/models` and **Target output landmark directory** to `molar_tutorial/test/predicted`.
+3. Leave **Skip template optimization** unticked. Before registering each specimen, MorphoWeave then searches the shape model for a starting template that fits that specimen better.
+4. Click **Run Batch Auto-Landmarking**. The 5 molars take about 40 seconds.
 
 **✅ Checkpoint:** The progress bar reaches **100%**, and `test/predicted/` contains five `.mrk.json` files, one per molar, with the same names as the meshes.
 
@@ -338,7 +349,8 @@ import vtk
 WORK = os.path.expanduser("~/molar_tutorial")
 
 def read_points(path):
-    markup = json.load(open(path))["markups"][0]
+    with open(path, encoding="utf-8") as f:
+        markup = json.load(f)["markups"][0]
     pts = np.array([p["position"] for p in markup["controlPoints"]])
     return pts * [-1, -1, 1] if markup.get("coordinateSystem", "LPS") == "LPS" else pts
 
@@ -380,7 +392,7 @@ Go to **MorphoWeave → Surface Segmentation**.
 
 <p align="center"><img src="images/13_segmentation_inputs.png" width="600" alt="Surface Segmentation with aligned models, population correspondences and output folders set; status shows 110 paired specimens detected"></p>
 
-1. **①** Set the folders, using your timestamped Atlas Builder output folder:
+1. Set the folders, using your timestamped Atlas Builder output folder:
 
    | Field | Folder |
    |---|---|
@@ -389,7 +401,7 @@ Go to **MorphoWeave → Surface Segmentation**.
    | **Output folder** | `molar_tutorial/segmentation` |
 
    The status reads **Ready — 110 paired specimens detected.** Meshes and correspondence files are paired by filename.
-2. **②** Click **Run Segmentation**. With the default 15 segments, this takes about 3 minutes.
+2. Click **Run Segmentation**. With the default 15 segments, this takes about 3 minutes.
 
 **✅ Checkpoint:** The status reads **Complete**. The first three specimens are previewed in the scene as `…_seg_preview` models, overlapping because they're aligned. Toggle them one at a time in the **Data** module.
 
