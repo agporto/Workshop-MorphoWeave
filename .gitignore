@@ -1,0 +1,10 @@
+# Results you generate during the tutorial (folders are kept via .gitkeep)
+molar_tutorial/output/*
+molar_tutorial/segmentation/*
+molar_tutorial/test/predicted/*
+molar_tutorial/MorphoWeaveModels/*
+!molar_tutorial/**/.gitkeep
+
+# OS clutter
+.DS_Store
+Thumbs.db

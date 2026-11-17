@@ -7,7 +7,11 @@ import glob, json, os
 import numpy as np
 import vtk
 
-WORK = os.path.expanduser("~/molar_tutorial")
+# EDIT THIS: the molar_tutorial folder inside the workshop files (Windows backslashes are fine)
+WORK = os.path.expanduser(r"~/Downloads/Workshop-MorphoWeave-main/molar_tutorial")
+
+if not os.path.isdir(os.path.join(WORK, "test", "predicted")):
+    raise FileNotFoundError(f"{WORK} doesn't look like the molar_tutorial folder. Check the WORK path above.")
 
 def read_points(path):
     with open(path, encoding="utf-8") as f:

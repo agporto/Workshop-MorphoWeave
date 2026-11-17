@@ -14,9 +14,9 @@ In this tutorial you'll use **MorphoWeave** in 3D Slicer to:
 | | |
 |---|---|
 | **Time** | About 30 minutes. Compute time is under 5 minutes in total. |
-| **You need** | a recent [3D Slicer](https://download.slicer.org/) release (screenshots use 5.13), ~1.5 GB free disk space, and an internet connection the first time you run Landmark Transfer. |
-| **Data** | 115 molar crown surfaces with 16 manual landmarks each, from the Figshare dataset that accompanies the [MorphoWeave preprint](https://doi.org/10.64898/2026.09.28.755222). |
-| **No coding** | Everything is done with buttons. Two optional copy-and-paste snippets save you some file shuffling. |
+| **You need** | a recent [3D Slicer](https://download.slicer.org/) release (screenshots use 5.13), ~300 MB free disk space, and an internet connection the first time you run Landmark Transfer. |
+| **Data** | 115 molar crown surfaces with 16 manual landmarks each, included in this repository (30 MB). The data accompanies the [MorphoWeave preprint](https://doi.org/10.64898/2026.09.28.755222). |
+| **No coding** | Everything is done with buttons. One optional copy-and-paste snippet scores your predictions. |
 
 **Contents:** [0. Setup](#0-setup) · [Key ideas](#key-ideas-in-60-seconds) · [1. Atlas Builder](#1-build-an-atlas-atlas-builder) · [2. Model Library](#2-build-and-explore-a-shape-model-model-library) · [3. Single transfer](#3-transfer-landmarks-to-one-molar-landmark-transfer--single-run) · [4. Check](#4-check-the-prediction) · [5. Batch](#5-landmark-many-molars-at-once-landmark-transfer--batch) · [6. Segmentation](#6-segment-every-molar-into-matching-regions-surface-segmentation) · [Going further](#going-further) · [Troubleshooting](#troubleshooting)
 
@@ -33,104 +33,38 @@ In this tutorial you'll use **MorphoWeave** in 3D Slicer to:
 > [!NOTE]
 > If MorphoWeave isn't in the Extension Manager yet, clone the [repository](https://github.com/agporto/SlicerMorphoWeave), then in Slicer open **Developer Tools → Extension Wizard → Select Extension** and choose the cloned folder. See [developer installation](https://github.com/agporto/SlicerMorphoWeave#developer-installation).
 
-### 0.2 Download the data
+### 0.2 Get the workshop files (data included)
 
-1. Open the [MorphoWeave Figshare dataset](https://figshare.com/s/3ff773754624c9132e3e) and click **Download** (`data.zip`, 1.17 GB).
-2. Extract it. Windows (**Extract All**) and macOS (double-click) put the contents in a folder named `data`. On Linux, `unzip` extracts into the current folder. You only need this folder:
+The molar data is already in this repository, split into training and test sets, along with empty folders for every result you'll create. There's nothing to set up.
 
-```text
-data/molar/2026_06-12_19_24_15/
-├── alignedModels/   115 molar surfaces  (a10_sas_align.ply, …)
-├── alignedLMs/      115 landmark files  (a10_sas_align.mrk.json, …), 16 points each
-├── atlas/                       ┐
-└── population_correspondences/  ┘ outputs of an earlier run; you'll regenerate these
-```
+- **Without git:** click the green **Code** button at the top of this page → **Download ZIP**, then extract it (about 30 MB).
+- **With git:**
+  ```bash
+  git clone https://github.com/agporto/Workshop-MorphoWeave.git
+  ```
 
-The `mouse/` and `vertebrae/` folders hold two more datasets that use the same workflow. You can try them once you've finished.
-
-> [!NOTE]
-> The meshes were aligned in an earlier MorphoWeave run, which is why their names end in `_sas_align`. That doesn't matter here: Atlas Builder aligns its inputs again anyway.
-
-### 0.3 Set aside five molars to test on
-
-A fair test of automatic landmarking uses specimens that weren't used to build the model. You'll train on 110 molars and keep 5 for testing:
-
-| Held-out specimens |
-|---|
-| `a10_sas_align` · `h08_sas_align` · `k01_sas_align` · `q02_sas_align` · `x02_sas_align` |
-
-Create this folder layout. Both options below produce the same result:
+Everything you need is in the `molar_tutorial/` folder:
 
 ```text
 molar_tutorial/
 ├── train/
-│   ├── models/       110 .ply files
-│   └── landmarks/    110 .mrk.json files
+│   ├── models/          110 molar surfaces (.ply)
+│   └── landmarks/       their 110 manual landmark files (.mrk.json), 16 points each
 ├── test/
-│   ├── models/       5 .ply files (the held-out molars)
-│   ├── landmarks/    their 5 manual .mrk.json files (used only for checking)
-│   └── predicted/    empty for now
-├── output/           empty for now
-└── segmentation/     empty for now
+│   ├── models/          5 held-out molars: a10, h08, k01, q02, x02
+│   ├── landmarks/       their manual landmarks, used only to check your predictions
+│   └── predicted/       empty: batch predictions go here (step 5)
+├── output/              empty: Atlas Builder results go here (step 1)
+├── MorphoWeaveModels/   empty: your saved shape model goes here (step 2)
+└── segmentation/        empty: segmented regions go here (step 6)
 ```
 
-<details>
-<summary><b>Option A: copy and paste into Slicer (recommended)</b></summary>
+Throughout the tutorial, `molar_tutorial/…` means this folder, wherever you extracted or cloned it. For example, on Windows it might be `C:\Users\you\Downloads\Workshop-MorphoWeave-main\molar_tutorial`.
 
-Open **View → Python Console** in Slicer. Change the path inside `DATA = r"..."` to the folder where you extracted `data.zip`, then paste the whole block into the console and press <kbd>Enter</kbd>. It works on Windows, macOS, and Linux. You can paste a Windows path with backslashes as-is, and the script finds the `molar` folder anywhere inside the path you give it. The script is also saved as [`scripts/setup_molar_tutorial.py`](scripts/setup_molar_tutorial.py).
+**Why 5 held-out molars?** A fair test of automatic landmarking uses specimens the model has never seen. The atlas and shape model are built from `train/` only. You'll then predict landmarks on the 5 molars in `test/` and compare them against their manual landmarks.
 
-```python
-import glob, os, shutil
-
-# 1) EDIT THIS: where you extracted data.zip. Paste the path between the quotes as-is;
-#    the r"..." keeps Windows backslashes working. Examples:
-#      Windows: r"C:\Users\you\Downloads\data"
-#      macOS:   r"~/Downloads/data"
-#      Linux:   r"~/Downloads"
-DATA = r"~/Downloads/data"
-
-# 2) Where the tutorial will work (created for you)
-WORK = os.path.expanduser("~/molar_tutorial")
-
-HELD_OUT = ["a10", "h08", "k01", "q02", "x02"]   # 5 molars kept out of the atlas
-
-# Find molar/<run>/alignedModels under DATA, wherever your unzip tool put it
-DATA = os.path.expanduser(DATA.strip().strip('"'))
-found = [d for d in sorted(glob.glob(os.path.join(DATA, "**", "alignedModels"), recursive=True))
-         if "molar" in os.path.normpath(d).split(os.sep)]
-
-if not found:
-    raise FileNotFoundError(f"No molar/.../alignedModels folder found under {DATA}. Check the DATA path above.")
-
-SRC = os.path.dirname(found[0])
-print("Using data in", SRC)
-for sub in ("train/models", "train/landmarks", "test/models", "test/landmarks",
-            "test/predicted", "output", "segmentation"):
-    os.makedirs(os.path.join(WORK, sub), exist_ok=True)
-
-for mesh in glob.glob(os.path.join(SRC, "alignedModels", "*.ply")):
-    stem = os.path.basename(mesh)[:-len(".ply")]
-    lms = os.path.join(SRC, "alignedLMs", stem + ".mrk.json")
-    split = "test" if stem.split("_")[0] in HELD_OUT else "train"
-    shutil.copy(mesh, os.path.join(WORK, split, "models"))
-    shutil.copy(lms, os.path.join(WORK, split, "landmarks"))
-
-for split in ("train", "test"):
-    print(split, len(os.listdir(os.path.join(WORK, split, "models"))), "molars ->", os.path.join(WORK, split))
-```
-
-It should print `Using data in …`, then `train 110 molars` and `test 5 molars`. If the path is wrong, you'll see a `FileNotFoundError`. Fix `DATA` and paste again.
-
-</details>
-
-<details>
-<summary><b>Option B: use your file manager</b></summary>
-
-1. Create the folders shown above.
-2. Copy everything in `alignedModels/` to `train/models/` and everything in `alignedLMs/` to `train/landmarks/`.
-3. **Move** the five held-out `.ply` files from `train/models/` to `test/models/`, and their five `.mrk.json` files from `train/landmarks/` to `test/landmarks/`.
-
-</details>
+> [!NOTE]
+> The meshes were aligned in an earlier MorphoWeave run, which is why their names end in `_sas_align`. That doesn't matter here: Atlas Builder aligns its inputs again anyway.
 
 ---
 
@@ -339,14 +273,18 @@ Once a single run looks good, apply the same settings to a whole folder. The num
 <details>
 <summary><b>Optional: score all five predictions</b></summary>
 
-Paste this into **View → Python Console**. It's also saved as [`scripts/check_accuracy.py`](scripts/check_accuracy.py).
+Edit the `WORK` line to point at your `molar_tutorial` folder, then paste the block into **View → Python Console**. It's also saved as [`scripts/check_accuracy.py`](scripts/check_accuracy.py).
 
 ```python
 import glob, json, os
 import numpy as np
 import vtk
 
-WORK = os.path.expanduser("~/molar_tutorial")
+# EDIT THIS: the molar_tutorial folder inside the workshop files (Windows backslashes are fine)
+WORK = os.path.expanduser(r"~/Downloads/Workshop-MorphoWeave-main/molar_tutorial")
+
+if not os.path.isdir(os.path.join(WORK, "test", "predicted")):
+    raise FileNotFoundError(f"{WORK} doesn't look like the molar_tutorial folder. Check the WORK path above.")
 
 def read_points(path):
     with open(path, encoding="utf-8") as f:
@@ -514,7 +452,7 @@ Please also cite 3D Slicer, and SlicerDenseCorrespondenceAnalysis when you use A
 
 ## License
 
-This tutorial (text, figures, and scripts) is licensed under [CC BY 4.0](LICENSE). You're free to reuse and adapt it, including for your own workshops, as long as you give credit. MorphoWeave itself is distributed under the [BSD 2-Clause License](https://github.com/agporto/SlicerMorphoWeave/blob/main/LICENSE).
+This tutorial (text, figures, scripts, and the molar data in `molar_tutorial/`) is licensed under [CC BY 4.0](LICENSE). If you reuse the molar data, please cite the preprint above. You're free to reuse and adapt it, including for your own workshops, as long as you give credit. MorphoWeave itself is distributed under the [BSD 2-Clause License](https://github.com/agporto/SlicerMorphoWeave/blob/main/LICENSE).
 
 ---
 
