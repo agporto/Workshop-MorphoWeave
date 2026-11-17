@@ -15,7 +15,7 @@ In this tutorial you'll use **MorphoWeave** in 3D Slicer to:
 |---|---|
 | **Time** | About 30 minutes. Compute time is under 5 minutes in total. |
 | **You need** | a recent [3D Slicer](https://download.slicer.org/) release (screenshots use 5.13), ~300 MB free disk space, and an internet connection the first time you run Landmark Transfer. |
-| **Data** | 115 molar crown surfaces with 16 manual landmarks each, included in this repository (30 MB). The data accompanies the [MorphoWeave preprint](https://doi.org/10.64898/2026.09.28.755222). |
+| **Data** | 115 molar crown surfaces with 16 manual landmarks each, from [Boyer et al. 2011](https://doi.org/10.1073/pnas.1112822108), included in this repository (30 MB). |
 | **No coding** | Everything is done with buttons. One optional copy-and-paste snippet scores your predictions. |
 
 **Contents:** [0. Setup](#0-setup) · [Key ideas](#key-ideas-in-60-seconds) · [1. Atlas Builder](#1-build-an-atlas-atlas-builder) · [2. Model Library](#2-build-and-explore-a-shape-model-model-library) · [3. Single transfer](#3-transfer-landmarks-to-one-molar-landmark-transfer--single-run) · [4. Check](#4-check-the-prediction) · [5. Batch](#5-landmark-many-molars-at-once-landmark-transfer--batch) · [6. Segmentation](#6-segment-every-molar-into-matching-regions-surface-segmentation) · [Going further](#going-further) · [Troubleshooting](#troubleshooting)
@@ -64,7 +64,7 @@ Throughout the tutorial, `molar_tutorial/…` means this folder, wherever you ex
 **Why 5 held-out molars?** A fair test of automatic landmarking uses specimens the model has never seen. The atlas and shape model are built from `train/` only. You'll then predict landmarks on the 5 molars in `test/` and compare them against their manual landmarks.
 
 > [!NOTE]
-> The meshes were aligned in an earlier MorphoWeave run, which is why their names end in `_sas_align`. That doesn't matter here: Atlas Builder aligns its inputs again anyway.
+> The molar surfaces come from [Boyer et al. 2011](https://doi.org/10.1073/pnas.1112822108). They were aligned in an earlier MorphoWeave run, which is why their names end in `_sas_align`. That doesn't matter here: Atlas Builder aligns its inputs again anyway.
 
 ---
 
@@ -446,13 +446,21 @@ bioRxiv. https://doi.org/10.64898/2026.09.28.755222
 
 </details>
 
+The molar dataset used in this tutorial comes from:
+
+```text
+Boyer, D. M., Lipman, Y., St. Clair, E., Puente, J., Patel, B. A., Funkhouser, T., Jernvall, J., & Daubechies, I. (2011).
+Algorithms to automatically quantify the geometric similarity of anatomical surfaces.
+Proceedings of the National Academy of Sciences, 108(45), 18221–18226. https://doi.org/10.1073/pnas.1112822108
+```
+
 Please also cite 3D Slicer, and SlicerDenseCorrespondenceAnalysis when you use Atlas Builder. See the main [README](https://github.com/agporto/SlicerMorphoWeave#citation) for details.
 
 ---
 
 ## License
 
-This tutorial (text, figures, scripts, and the molar data in `molar_tutorial/`) is licensed under [CC BY 4.0](LICENSE). If you reuse the molar data, please cite the preprint above. You're free to reuse and adapt it, including for your own workshops, as long as you give credit. MorphoWeave itself is distributed under the [BSD 2-Clause License](https://github.com/agporto/SlicerMorphoWeave/blob/main/LICENSE).
+This tutorial (text, figures, and scripts) is licensed under [CC BY 4.0](LICENSE). The molar data in `molar_tutorial/` comes from Boyer et al. (2011), via the MorphoWeave preprint's dataset (CC BY 4.0). If you reuse it, please cite both (see [How to cite](#how-to-cite)). You're free to reuse and adapt it, including for your own workshops, as long as you give credit. MorphoWeave itself is distributed under the [BSD 2-Clause License](https://github.com/agporto/SlicerMorphoWeave/blob/main/LICENSE).
 
 ---
 
