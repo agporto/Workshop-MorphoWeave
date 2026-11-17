@@ -15,7 +15,7 @@ In this tutorial you'll use **MorphoWeave** in 3D Slicer to:
 |---|---|
 | **Time** | About 30 minutes. Compute time is under 5 minutes in total. |
 | **You need** | a recent [3D Slicer](https://download.slicer.org/) release (screenshots use 5.13), ~1.5 GB free disk space, and an internet connection the first time you run Landmark Transfer. |
-| **Data** | 115 molar crown surfaces with 16 manual landmarks each, from the MorphoWeave Figshare dataset. |
+| **Data** | 115 molar crown surfaces with 16 manual landmarks each, from the Figshare dataset that accompanies the [MorphoWeave preprint](https://doi.org/10.64898/2026.09.28.755222). |
 | **No coding** | Everything is done with buttons. Two optional copy-and-paste snippets save you some file shuffling. |
 
 **Contents:** [0. Setup](#0-setup) · [Key ideas](#key-ideas-in-60-seconds) · [1. Atlas Builder](#1-build-an-atlas-atlas-builder) · [2. Model Library](#2-build-and-explore-a-shape-model-model-library) · [3. Single transfer](#3-transfer-landmarks-to-one-molar-landmark-transfer--single-run) · [4. Check](#4-check-the-prediction) · [5. Batch](#5-landmark-many-molars-at-once-landmark-transfer--batch) · [6. Segmentation](#6-segment-every-molar-into-matching-regions-surface-segmentation) · [Going further](#going-further) · [Troubleshooting](#troubleshooting)
@@ -472,14 +472,37 @@ Use the same workflow with your own specimens. The requirements:
 
 ## How to cite
 
-If you use MorphoWeave, cite the software repository until the paper is published:
+If you use MorphoWeave, please cite the preprint:
 
 ```text
-Porto, A. MorphoWeave: Atlas-based 3D landmark transfer and statistical shape modeling.
-https://github.com/agporto/SlicerMorphoWeave
+Porto, A., Wolcott, K. A., Fenner, K. L., Gordon, C., Shi, B., & Stanley, E. L. (2026).
+Biology-guided machine learning for robust anatomical correspondence across biodiversity datasets.
+bioRxiv. https://doi.org/10.64898/2026.09.28.755222
 ```
 
+<details>
+<summary>BibTeX</summary>
+
+```bibtex
+@article{porto2026morphoweave,
+  title   = {Biology-guided machine learning for robust anatomical correspondence across biodiversity datasets},
+  author  = {Porto, Arthur and Wolcott, Katherine A. and Fenner, Kelsey L. and Gordon, Caleb and Shi, Breanna and Stanley, Edward L.},
+  journal = {bioRxiv},
+  year    = {2026},
+  doi     = {10.64898/2026.09.28.755222},
+  url     = {https://www.biorxiv.org/content/10.64898/2026.09.28.755222v1}
+}
+```
+
+</details>
+
 Please also cite 3D Slicer, and SlicerDenseCorrespondenceAnalysis when you use Atlas Builder. See the main [README](https://github.com/agporto/SlicerMorphoWeave#citation) for details.
+
+---
+
+## License
+
+This tutorial (text, figures, and scripts) is licensed under [CC BY 4.0](LICENSE). You're free to reuse and adapt it, including for your own workshops, as long as you give credit. MorphoWeave itself is distributed under the [BSD 2-Clause License](https://github.com/agporto/SlicerMorphoWeave/blob/main/LICENSE).
 
 ---
 
